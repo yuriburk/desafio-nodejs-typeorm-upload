@@ -1,4 +1,4 @@
-import { getRepository, Repository } from 'typeorm';
+import { getRepository, getCustomRepository, Repository } from 'typeorm';
 
 import AppError from '../errors/AppError';
 import Category from '../models/Category';
@@ -19,7 +19,7 @@ class CreateTransactionService {
 
   constructor() {
     this.categoriesRepository = getRepository(Category);
-    this.transactionsRepository = new TransactionsRepository();
+    this.transactionsRepository = getCustomRepository(TransactionsRepository);
   }
 
   public async execute({
