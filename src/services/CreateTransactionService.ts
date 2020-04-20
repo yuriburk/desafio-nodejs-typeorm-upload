@@ -1,5 +1,6 @@
 import { getCustomRepository } from 'typeorm';
 
+import AppError from '../errors/AppError';
 import Transaction from '../models/Transaction';
 import CreateCategoryService from './CreateCategoryService';
 import ValidateBalanceService from './ValidateBalanceService';
@@ -24,7 +25,14 @@ class CreateTransactionService {
     type,
     category,
   }: TransactionDTO): Promise<Transaction> {
-    await this.validateBalance.execute({ type, value } as TransactionDTO);
+    const validateBalance = await this.validateBalance.execute({
+      type,
+      value,
+    } as TransactionDTO);
+
+    if (!validateBalance) {
+      throw new AppError('Outcome is higher than balance');
+    }
 
     const { id } = await this.createCategory.execute(category);
 

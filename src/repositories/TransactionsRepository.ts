@@ -22,10 +22,11 @@ class TransactionsRepository extends Repository<Transaction> {
     const transactions = await this.find({ where: { type } });
 
     return transactions?.length > 0
-      ? transactions.reduce((accumulator, currentTransaction) => {
-          const result = accumulator + currentTransaction.value;
-          return result;
-        }, initialValue)
+      ? transactions.reduce(
+          (accumulator, currentTransaction) =>
+            accumulator + currentTransaction.value,
+          initialValue,
+        )
       : initialValue;
   }
 }
