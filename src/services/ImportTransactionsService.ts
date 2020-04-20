@@ -25,7 +25,7 @@ class ImportTransactionsService {
   }
 
   async execute(csvString: string): Promise<Transaction[]> {
-    const transactions: Transaction[] = [];
+    let transactions: Transaction[] = [];
 
     await csvReader({
       headers: ['title', 'type', 'value', 'category'],
@@ -35,8 +35,6 @@ class ImportTransactionsService {
         if (!title || !type || !value || !category) {
           throw new AppError('All fields must have a value');
         }
-
-        await this.validateBalance.execute({ type, value } as TransactionDTO);
 
         const { id } = await this.createCategory.execute(category);
 
@@ -50,7 +48,7 @@ class ImportTransactionsService {
         transactions.push(transaction);
       });
 
-    this.transactionsRepository.create(transactions);
+    transactions = this.transactionsRepository.create(transactions);
     await this.transactionsRepository.save(transactions);
 
     return transactions;
