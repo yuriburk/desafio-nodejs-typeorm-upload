@@ -1,17 +1,20 @@
-import { getRepository, getCustomRepository, Repository } from 'typeorm';
+import { getCustomRepository } from 'typeorm';
 
-import Category from '../models/Category';
 import Transaction from '../models/Transaction';
+import CreateCategoryService from './CreateCategoryService';
+import ValidateBalanceService from './ValidateBalanceService';
 import TransactionsRepository from '../repositories/TransactionsRepository';
-import AppError from '../errors/AppError';
 
 class CreateTransactionService {
-  private categoriesRepository: Repository<Category>;
+  private createCategory: CreateCategoryService;
+
+  private validateBalance: ValidateBalanceService;
 
   private transactionsRepository: TransactionsRepository;
 
   constructor() {
-    this.categoriesRepository = getRepository(Category);
+    this.createCategory = new CreateCategoryService();
+    this.validateBalance = new ValidateBalanceService();
     this.transactionsRepository = getCustomRepository(TransactionsRepository);
   }
 
@@ -21,51 +24,20 @@ class CreateTransactionService {
     type,
     category,
   }: TransactionDTO): Promise<Transaction> {
-    const validBalance = await this.validateOutcome({
-      value,
-      type,
-    } as TransactionDTO);
-    if (!validBalance) {
-      throw new AppError('Outcome is higher than balance');
-    }
+    await this.validateBalance.execute({ type, value } as TransactionDTO);
 
-    let categorySaved = await this.categoriesRepository.findOne({
-      where: { title: category },
-    });
-
-    if (!categorySaved) {
-      categorySaved = this.categoriesRepository.create({
-        title: category,
-      });
-
-      await this.categoriesRepository.save(categorySaved);
-    }
+    const { id } = await this.createCategory.execute(category);
 
     const transaction = this.transactionsRepository.create({
       title,
       value,
       type,
-      category_id: categorySaved.id,
+      category_id: id,
     });
 
     await this.transactionsRepository.save(transaction);
 
     return transaction;
-  }
-
-  private async validateOutcome({
-    value,
-    type,
-  }: TransactionDTO): Promise<boolean> {
-    if (type === 'outcome') {
-      const balance = await this.transactionsRepository.getBalance();
-
-      if (value > balance.total) {
-        return false;
-      }
-    }
-
-    return true;
   }
 }
 
