@@ -29,8 +29,6 @@ class ImportTransactionsService {
           category,
         });
 
-        console.log(transaction);
-
         if (transaction.id) {
           transactions.push(transaction);
         }
