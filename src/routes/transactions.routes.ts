@@ -10,11 +10,13 @@ const transactionsRouter = Router();
 const upload = multer();
 
 transactionsRouter.get('/', async (request, response) => {
-  const { skip, take } = request.query;
+  const { skip, take, sort, order } = request.query;
 
   const transactions = await new GetTransactionsService().execute({
     skip,
     take,
+    sort,
+    order,
   });
 
   return response.status(200).json(transactions);

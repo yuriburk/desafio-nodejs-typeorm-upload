@@ -12,6 +12,8 @@ interface Response {
 interface Query {
   take: any;
   skip: any;
+  sort: any;
+  order: any;
 }
 
 class GetTransactionService {
@@ -21,21 +23,20 @@ class GetTransactionService {
     this.transactionsRepository = getCustomRepository(TransactionsRepository);
   }
 
-  public async execute({ take, skip }: Query): Promise<Response> {
-    const [
-      transactions,
-      count,
-    ] = await this.transactionsRepository.findAndCount({
-      take,
-      skip,
-      order: {
-        created_at: 'ASC',
-      },
-    });
+  public async execute({ take, skip, sort, order }: Query): Promise<Response> {
+    const transactions = await this.transactionsRepository
+      .createQueryBuilder('transaction')
+      .innerJoinAndSelect('transaction.category', 'category')
+      .where('category.id = transaction.category_id')
+      .orderBy(sort, order)
+      .skip(skip)
+      .take(take)
+      .getMany();
+
     const response: Response = {
       transactions,
       balance: await this.transactionsRepository.getBalance(),
-      count,
+      count: await this.transactionsRepository.count(),
     };
 
     return response;
