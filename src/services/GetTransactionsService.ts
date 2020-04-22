@@ -28,6 +28,9 @@ class GetTransactionService {
     ] = await this.transactionsRepository.findAndCount({
       take,
       skip,
+      order: {
+        created_at: 'ASC',
+      },
     });
     const response: Response = {
       transactions,
