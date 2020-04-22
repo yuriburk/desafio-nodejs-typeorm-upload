@@ -6,6 +6,12 @@ import Transaction from '../models/Transaction';
 interface Response {
   transactions: Transaction[];
   balance: Balance;
+  count: number;
+}
+
+interface Query {
+  take: any;
+  skip: any;
 }
 
 class GetTransactionService {
@@ -15,10 +21,18 @@ class GetTransactionService {
     this.transactionsRepository = getCustomRepository(TransactionsRepository);
   }
 
-  public async execute(): Promise<Response> {
+  public async execute({ take, skip }: Query): Promise<Response> {
+    const [
+      transactions,
+      count,
+    ] = await this.transactionsRepository.findAndCount({
+      take,
+      skip,
+    });
     const response: Response = {
-      transactions: await this.transactionsRepository.find(),
+      transactions,
       balance: await this.transactionsRepository.getBalance(),
+      count,
     };
 
     return response;
